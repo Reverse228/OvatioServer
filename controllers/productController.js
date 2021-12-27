@@ -3,7 +3,7 @@ const sharp = require("sharp");
 const { Product, UserBuyProduct } = require("../models/models");
 const ApiError = require("../error/ApiError");
 const { Sequelize } = require("../db");
-const e = require("cors");
+const fs = require("fs");
 const Op = Sequelize.Op;
 
 class ProductController {
@@ -97,13 +97,20 @@ class ProductController {
 
   async updateInfoAll(req, res) {
     const info = req.body;
+    const imgOldName = await Product.findOne({ where: { id: info.id } });
 
-    const imgOldName = await Product.findOne(
-      { attributes: ["img"] },
-      { where: { id: info.id } }
-    );
+    if (imgOldName.img) {
+      const filePath = `./static/${imgOldName.img}`;
 
-    info.img = imgOldName.img;
+      fs.exists(filePath, (exist) => {
+        if (exist) {
+          fs.unlinkSync(filePath);
+        }
+      });
+    }
+
+    const newName = uuid.v4() + ".jpeg";
+    info.img = newName;
     info.availability = info.count > 0 ? true : false;
 
     const device = await Product.update(info, { where: { id: info.id } });
@@ -114,7 +121,7 @@ class ProductController {
       await sharp(img.data)
         .resize({ width: 250 })
         .jpeg()
-        .toFile(`./static/${imgOldName.img}`);
+        .toFile(`./static/${newName}`);
     }
 
     return res.json(device);

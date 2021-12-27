@@ -27,7 +27,7 @@ class UserProductController {
   async getStatus(req, res) {
     const { status } = req.body;
     const changeParam = await UserBuyProduct.findAll({
-      where: { status: status },
+      where: { status },
     });
 
     return res.json(changeParam);
@@ -35,10 +35,7 @@ class UserProductController {
 
   async updateStatus(req, res) {
     const { id, status } = req.body;
-    const updateStatus = await UserBuyProduct.update(
-      { status: status },
-      { where: { id: id } }
-    );
+    await UserBuyProduct.update({ status: status }, { where: { id: id } });
 
     const getInfo = await UserBuyProduct.findOne({ where: { id: id } });
     return res.json(getInfo);
